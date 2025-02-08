@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的电子日记本</title>
+    <style>
+        body {
+            font-family: '微软雅黑', sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .diary-container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        #datePicker {
+            padding: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        #titleInput {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 18px;
+        }
+
+        #contentInput {
+            width: 100%;
+            height: 400px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: vertical;
+            line-height: 1.6;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #loadEntries {
+            margin-top: 20px;
+            padding: 10px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="diary-container">
+        <h1>📖 我的日记本</h1>
+        <input type="date" id="datePicker" value="">
+        <input type="text" id="titleInput" placeholder="日记标题...">
+        <textarea id="contentInput" placeholder="今天发生了什么呢..."></textarea>
+        
+        <div class="button-group">
+            <button onclick="saveEntry()">💾 保存日记</button>
+            <button onclick="loadEntry()">📂 读取日记</button>
+            <button onclick="clearFields()">🧹 清空内容</button>
+        </div>
+
+        <select id="loadEntries" size="5" onchange="selectEntry(this.value)">
+            <option value="">-- 已保存的日记 --</option>
+        </select>
+    </div>
+
+    <script>
+        // 自动填充当前日期
+        document.getElementById('datePicker').value = new Date().toISOString().substr(0, 10);
+
+        // 保存日记到本地存储
+        function saveEntry() {
+            const date = document.getElementById('datePicker').value;
+            const title = document.getElementById('titleInput').value;
+            const content = document.getElementById('contentInput').value;
+
+            if (!date || !content) {
+                alert("请填写日期和内容！");
+                return;
+            }
+
+            const entry = {
+                title: title,
+                content: content,
+                timestamp: new Date().toISOString()
+            };
+
+            localStorage.setItem(date, JSON.stringify(entry));
+            updateEntryList();
+            alert("日记保存成功！");
+        }
+
+        // 加载日记列表
+        function updateEntryList() {
+            const select = document.getElementById('loadEntries');
+            select.innerHTML = '<option value="">-- 已保存的日记 --</option>';
+            
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = `${key} - ${JSON.parse(localStorage.getItem(key)).title}`;
+                select.appendChild(option);
+            }
+        }
+
+        // 选择日记
+        function selectEntry(date) {
+            if (!date) return;
+            const entry = JSON.parse(localStorage.getItem(date));
+            document.getElementById('datePicker').value = date;
+            document.getElementById('titleInput').value = entry.title;
+            document.getElementById('contentInput').value = entry.content;
+        }
+
+        // 加载指定日期的日记
+        function loadEntry() {
+            const date = document.getElementById('datePicker').value;
+            const entry = localStorage.getItem(date);
+            
+            if (entry) {
+                const data = JSON.parse(entry);
+                document.getElementById('titleInput').value = data.title;
+                document.getElementById('contentInput').value = data.content;
+            } else {
+                alert("当日没有保存的日记！");
+            }
+        }
+
+        // 清空输入框
+        function clearFields() {
+            if (confirm("确定要清空当前内容吗？")) {
+                document.getElementById('titleInput').value = '';
+                document.getElementById('contentInput').value = '';
+            }
+        }
+
+        // 初始化加载日记列表
+        updateEntryList();
+    </script>
+</body>
+</html>
